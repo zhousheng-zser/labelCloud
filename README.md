@@ -6,8 +6,19 @@
     <img src="https://img.shields.io/badge/code%20style-black-000000.svg" />
 </p>
 
+# 没有相机只有雷达
 
-# labelCloud
+# 在labelCloud-1.1.0的基础上修改的,用kitti_untransformed做车辆标注
+Input.py处理点云数据(将txt转为有序的bin文件)
+
+Output.py将生成后的标注数据转换为KITTI格式
+
+(能生成plan数据,用于替换的文件:[单位向量calib](https://github.com/zhousheng-zser/labelCloud/blob/master/temp/calib.txt),[image_2图片](https://github.com/zhousheng-zser/labelCloud/blob/master/temp/image.png))
+
+
+
+
+# labelCloud 
 :information_source: [Interactive Documentation](https://ch-sa.github.io/labelCloud/)
 
 A lightweight tool for labeling 3D bounding boxes in point clouds.
