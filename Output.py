@@ -10,6 +10,7 @@ import shutil
 import numpy as np
 from draw_kitti_util import *
 import open3d as o3d
+import shutil, math
 
 def display_3D(pcd, inliers):
     inlier_cloud = pcd.select_by_index(inliers)
@@ -68,12 +69,12 @@ def chang_data(A_path, B_path):
             if len(parts) >= 4:  # 确保至少有4个数据
                 # 计算倒数第二和倒数第三的和
                 a11 = float(parts[12]) * -1
-                a12 = float(parts[8])* 0.5 - float(parts[13])
-                a13 = float(parts[11])
-                a14 = 360.2-((float(parts[14])+np.pi+np.pi)%(2*np.pi)*180/np.pi)
+                a12 = float(parts[8])* 0.5 - float(parts[13]) + 0.25
+                a13 = float(parts[11])-0.2
+                a14 = -(float(parts[14]) + np.pi / 2)
                 beta = np.arctan2(a13,a11)
                 alpha = a14 + beta -np.sign(beta) * np.pi / 2
-                new_parts = ['Car','0.00','0', str(alpha)] +parts[4:-4] + [str(a11), str(a12), str(a13), str(a14)]
+                new_parts = ['Car','0.00','0', str(alpha)] +parts[4:-7] + [str(float(parts[8])+0.25),str(float(parts[9])+0.4),str(float(parts[10])+0.5),str(a11), str(a12), str(a13), str(a14)]
                 modified_line = ' '.join(new_parts) + '\n'
                 modified_lines.append(modified_line)
 
