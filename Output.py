@@ -61,7 +61,7 @@ def chang_data(A_path, B_path):
     shutil.copy2(A_path, B_path)
 
     # 2. 读取 B_path 文件并按行修改
-    with open(B_path, 'r') as file:
+    with open(B_path, 'r', encoding='utf-8') as file:
         lines = file.readlines()
 
     # 3. 修改每一行
@@ -69,22 +69,77 @@ def chang_data(A_path, B_path):
     for line in lines:
         stripped_line = line.strip()
         if stripped_line:  # 如果不是空行
-            # 分割行数据
+            # 分割行数据 (labelCloud 的格式通常为: class truc occ alpha bbox[4] dim[3] loc[3] ry)
             parts = stripped_line.split()
-            if len(parts) >= 4:  # 确保至少有4个数据
-                # 计算倒数第二和倒数第三的和
-                a11 = float(parts[12]) * -1
-                a12 = float(parts[8])* 0.5 - float(parts[13]) + 0.25
-                a13 = float(parts[11])-0.2
-                a14 = -(float(parts[14]) + np.pi / 2)
-                beta = np.arctan2(a13,a11)
-                alpha = a14 + beta -np.sign(beta) * np.pi / 2
-                new_parts = [parts[0],'0.00','0', str(alpha)] +parts[4:-7] + [str(float(parts[8])+0.25),str(float(parts[9])+0.4),str(float(parts[10])+0.5),str(a11), str(a12), str(a13), str(a14)]
+            if len(parts) >= 15:  # 确保包含足够的 KITTI 字段
+                obj_type = parts[0]
+                
+                # labelCloud 的 3D 尺寸 (通常按照 length, width, height 的顺序保存，这里解析为原版的顺序)
+                # 修改前代码将 parts[8,9,10] 错开，标准 labelCloud 导出: parts[8]=height, parts[9]=width, parts[10]=length
+                # 我们假设原始值为 h_lc, w_lc, l_lc
+                h_lc = float(parts[8])
+                w_lc = float(parts[9])
+                l_lc = float(parts[10])
+                
+                # labelCloud 的 3D 中心点 (雷达坐标系 x, y, z)
+                x_lc = float(parts[11])
+                y_lc = float(parts[12])
+                z_lc = float(parts[13])
+                
+                # labelCloud 的旋转角 (yaw)
+                ry_lc = float(parts[14])
+                
+                # ------------------- 核心转换 -------------------
+                
+                # 坐标系转换：从 雷达系 (x前, y左, z上) -> 相机系 (x右, y下, z前)
+                # 并且中心点从 几何中心 -> 底面中心
+                x_cam = -y_lc
+                y_cam = -z_lc + (h_lc / 2.0)  # 将中心点移到底面
+                z_cam = x_lc
+                
+                # 旋转角转换 (通常是相反的方向并且加上 pi/2)
+                ry_cam = -(ry_lc + np.pi / 2.0)
+                
+                # 维度赋值 (KITTI 要求输出顺序: height, width, length)
+                # 观察到原代码可能将维度混淆，我们强制统一格式:
+                h_kitti = h_lc
+                w_kitti = w_lc
+                l_kitti = l_lc
+                
+                # 计算 alpha (观察角)
+                alpha = ry_cam - np.arctan2(-x_cam, z_cam)
+                
+                # -----------------------------------------------
+                
+                # 构造符合 KITTI label_2 格式的 15 个字段
+                # 0: type
+                # 1: truncated (default: 0.00)
+                # 2: occluded (default: 0)
+                # 3: alpha
+                # 4-7: 2D bbox (left, top, right, bottom) 保留原有数据
+                # 8-10: 3D dims (height, width, length)
+                # 11-13: 3D loc (x, y, z) in cam coord
+                # 14: rotation_y in cam coord
+                new_parts = [
+                    obj_type,
+                    '0.00',
+                    '0',
+                    f"{alpha:.4f}",
+                ] + parts[4:8] + [
+                    f"{h_kitti:.4f}",
+                    f"{w_kitti:.4f}",
+                    f"{l_kitti:.4f}",
+                    f"{x_cam:.4f}",
+                    f"{y_cam:.4f}",
+                    f"{z_cam:.4f}",
+                    f"{ry_cam:.4f}"
+                ]
+                
                 modified_line = ' '.join(new_parts) + '\n'
                 modified_lines.append(modified_line)
 
     # 4. 将修改后的内容写回 B_path
-    with open(B_path, 'w') as file:
+    with open(B_path, 'w', encoding='utf-8') as file:
         file.writelines(modified_lines)
 
 def get_train_val_txt_kitti(src_path):
