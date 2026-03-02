@@ -41,6 +41,11 @@ def set_planes(src_path, target_path,calib_path):
     if b > 0:
         plane_model =  -plane_model
         a, b, c, d = plane_model
+
+    a = 0.004234
+    b = 0.009570
+    c = 0.999945
+    d = 3.852301
     #显示地面分隔
     #display_3D(pcd, inliers)
 
@@ -74,7 +79,7 @@ def chang_data(A_path, B_path):
                 a14 = -(float(parts[14]) + np.pi / 2)
                 beta = np.arctan2(a13,a11)
                 alpha = a14 + beta -np.sign(beta) * np.pi / 2
-                new_parts = ['Car','0.00','0', str(alpha)] +parts[4:-7] + [str(float(parts[8])+0.25),str(float(parts[9])+0.4),str(float(parts[10])+0.5),str(a11), str(a12), str(a13), str(a14)]
+                new_parts = [parts[0],'0.00','0', str(alpha)] +parts[4:-7] + [str(float(parts[8])+0.25),str(float(parts[9])+0.4),str(float(parts[10])+0.5),str(a11), str(a12), str(a13), str(a14)]
                 modified_line = ' '.join(new_parts) + '\n'
                 modified_lines.append(modified_line)
 
@@ -122,7 +127,8 @@ def get_train_val_txt_kitti(src_path):
     train_list = os.listdir(os.path.join(src_path,'labels'))
     #random.shuffle(train_list)  # 打乱顺序，随机采样
     # 设置训练和验证的比例
-    train_p = 0.9
+    train_p = 1
+    #train_p = 0.9
 
     # 开始写入分割文件
     f_train = open(os.path.join(set_path, "train.txt"), 'w')
@@ -133,7 +139,8 @@ def get_train_val_txt_kitti(src_path):
         shutil.copy2(src_path + '/pointclouds/'+src[:-4]+'.bin', object_path + '/training/velodyne/'+src[:-4]+'.bin')
         shutil.copy2(src_path + '/calib.txt',object_path + '/training/calib/' + src[:-4] + '.txt')
         shutil.copy2(src_path + '/image.png',object_path + '/training/image_2/' + src[:-4] + '.png')
-        set_planes(src_path + '/pointclouds/'+src[:-4]+'.bin', object_path + '/training/planes/'+src[:-4]+'.txt',object_path + '/training/calib/' + src[:-4] + '.txt' )
+        shutil.copy2(src_path + '/planes/'+src[:-4]+'.txt',object_path + '/training/planes/' + src[:-4] + '.txt')
+        #set_planes(src_path + '/pointclouds/'+src[:-4]+'.bin', object_path + '/training/planes/'+src[:-4]+'.txt',object_path + '/training/calib/' + src[:-4] + '.txt' )
         chang_data(src_path+'/labels/'+src, object_path + '/training/label_2/'+src)
         if i < int(len(train_list) * train_p):
             f_train.write(src[:-4] + '\n')
