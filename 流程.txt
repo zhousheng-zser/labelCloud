@@ -1,5 +1,7 @@
 Input:   json->(velodyne+planes+calib)
 nvidia盒子跑测试:  velodyne->labels
-标注:(velodyne+labels) -> 新的labels
-Output:   (velodyne+planes+calib+labels新旧都行 ) -> KITTI
-新的labels 去覆盖 KITTi中的label_2
+标注:(pointclouds+labels) -> 新的labels
+防止被删  calib和planes 都可以先放在标注的data中
+全都拷贝回去
+Output:   (pointclouds+planes+calib+labels新的 ) -> KITTI
+bin_label_to_pcd.py去检测Output生成的东西
