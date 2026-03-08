@@ -1,0 +1,5 @@
+Input:   json->(velodyne+planes+calib)
+nvidia盒子跑测试:  velodyne->labels
+标注:(velodyne+labels) -> 新的labels
+Output:   (velodyne+planes+calib+labels新旧都行 ) -> KITTI
+新的labels 去覆盖 KITTi中的label_2
